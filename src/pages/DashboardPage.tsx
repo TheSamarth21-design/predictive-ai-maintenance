@@ -55,20 +55,20 @@ export default function DashboardPage() {
 
       // Assuming the Excel has columns: id, name, status, risk, load, temp, vibration, pressure, rpm, health, lastService, nextService
       // For simplicity, map to Machine type, with defaults for missing fields
-      const importedMachines: Machine[] = jsonData.map((row: Record<string, unknown>) => ({
-        id: (row.id as string) || `M${Date.now()}`,
-        name: (row.name as string) || (row.id as string) || 'Unknown Machine',
-        status: (row.status as MachineStatus) || 'Running',
-        risk: (row.risk as number) || 0,
-        load: (row.load as number) || 0,
-        temp: (row.temp as number) || 0,
-        vibration: (row.vibration as number) || 0,
-        pressure: (row.pressure as number) || 0,
-        rpm: (row.rpm as number) || 0,
-        health: (row.health as number) || 100,
-        lastService: (row.lastService as string) || '2024-01-01',
-        nextService: (row.nextService as string) || '2024-12-31',
-        history: (row.history as MaintenanceRecord[]) || []
+      const importedMachines: Machine[] = jsonData.map((row: Record<string, unknown>, index: number) => ({
+        id: String(row.id || `M${Date.now() + index}`),
+        name: String(row.name || row.id || 'Unknown Machine'),
+        status: (['Running', 'Warning', 'Critical', 'Offline'].includes(String(row.status)) ? row.status as MachineStatus : 'Running'),
+        risk: Number(row.risk) || 0,
+        load: Number(row.load) || 0,
+        temp: Number(row.temp) || 0,
+        vibration: Number(row.vibration) || 0,
+        pressure: Number(row.pressure) || 0,
+        rpm: Number(row.rpm) || 0,
+        health: Number(row.health) || 100,
+        lastService: String(row.lastService || '2024-01-01'),
+        nextService: String(row.nextService || '2024-12-31'),
+        history: (Array.isArray(row.history) ? row.history as MaintenanceRecord[] : [])
       }));
 
       setMachines(importedMachines);
