@@ -23,19 +23,29 @@ export default function UploadPage() {
       return;
     }
 
+    // STRICT CSV SAFETY CHECK
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      const allowedExtensions = ['.csv', '.xlsx', '.xls', '.json'];
+ const isAllowed = allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+
+ if (!isAllowed) {
+   setError("Unsupported file format. Please upload CSV, Excel, or JSON.");
+   return;
+ }
+    }
+
     setIsAnalysing(true);
     setError(null);
     setDiagnostics(null);
 
     try {
-      // 1. Create a FormData package (This is what Python expects now)
+      // 1. Create a FormData package
       const formData = new FormData();
       formData.append("file", file); // Key MUST be "file"
 
       // 2. Call the Universal Python Endpoint
-const response = await fetch("https://nasa-engine-ai.onrender.com/predict-file", 
-  {
-          method: "POST",
+      const response = await fetch("https://nasa-engine-ai.onrender.com/predict-file", {
+        method: "POST",
         // NOTE: We DO NOT set 'Content-Type' header here. 
         // The browser adds the correct boundary automatically for FormData.
         body: formData, 
@@ -52,8 +62,6 @@ const response = await fetch("https://nasa-engine-ai.onrender.com/predict-file",
 
       // 3. AI DIAGNOSTICS ENGINE
       if (rul < 150) {
-        // Simple logic for the demo: 
-        // In a real app, Python would return the fault types too.
         if (rul < 60) {
           setDiagnostics({
             fault: "Mechanical Wear / Bearing Degradation",
@@ -99,7 +107,7 @@ const response = await fetch("https://nasa-engine-ai.onrender.com/predict-file",
           <div className="mx-auto w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
             <Upload className="text-emerald-500" />
           </div>
-          <p className="text-sm font-medium">{file ? file.name : "Select Maintenance Data File"}</p>
+          <p className="text-sm font-medium">{file ? file.name : "Select NASA Telemetry (.csv)"}</p>
           <p className="text-xs text-muted-foreground">Drag and drop or click to browse</p>
         </label>
       </div>
