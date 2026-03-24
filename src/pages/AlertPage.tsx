@@ -194,7 +194,10 @@ export default function AlertsPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <Mail size={16} className="text-ai" />
                   <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">Email Preview</h3>
-                  <button onClick={() => setEmailPreview(null)} className="ml-auto text-muted-foreground hover:text-foreground">
+                  <button onClick={() => {
+                    setEmailPreview(null);
+                    setEmailStatus(null);
+                  }} className="ml-auto text-muted-foreground hover:text-foreground">
                     <X size={14} />
                   </button>
                 </div>
@@ -221,8 +224,36 @@ export default function AlertsPage() {
                       <em className="text-muted-foreground">This is an automated alert from SyncPlant AI Predictive Maintenance System.</em>
                     </p>
                   </div>
-                  <button className="btn-primary w-full flex items-center justify-center gap-2 mt-2">
-                    <Send size={14} /> Send Email (Simulated)
+                  
+                  {/* Status Message */}
+                  <AnimatePresence>
+                    {emailStatus && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className={`p-2 rounded flex items-center gap-2 text-xs font-medium ${
+                          emailStatus.type === 'success'
+                            ? 'bg-safe/20 text-safe border border-safe/30'
+                            : 'bg-danger/20 text-danger border border-danger/30'
+                        }`}
+                      >
+                        {emailStatus.type === 'success' ? (
+                          <Check size={14} />
+                        ) : (
+                          <X size={14} />
+                        )}
+                        {emailStatus.message}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  <button
+                    onClick={handleSendEmail}
+                    disabled={sendingEmail || !emailEnabled}
+                    className="btn-primary w-full flex items-center justify-center gap-2 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send size={14} /> {sendingEmail ? 'Sending...' : 'Send Email Alert'}
                   </button>
                 </div>
               </motion.div>
