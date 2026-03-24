@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Thermometer, Wind, Gauge, RotateCw } from 'lucide-react';
+import { X, Thermometer, Wind, Gauge, RotateCw, BrainCircuit, Activity } from 'lucide-react';
 import type { Machine } from '@/lib/syncplant-data';
+import { useState } from 'react'; // Added for AI State
 
 interface Props {
   machine: Machine | null;
@@ -30,6 +31,41 @@ const REPAIR_STEPS: Record<string, string[]> = {
 };
 
 export default function MachineDetailModal({ machine, onClose }: Props) {
+  // --- NEW AI PREDICTION LOGIC ---
+  const [rul, setRul] = useState<number | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
+
+  const getAIPrediction = async () => {
+    if (!machine) return;
+    setLoadingAI(true);
+    
+    try {
+      // Mapping your UI data to the 21 NASA sensor inputs
+      // We use real values for the ones we have, and static baselines for the rest
+      const sensorInput = [
+        machine.temp, machine.vibration, machine.pressure, machine.rpm,
+        14.62, 21.61, 554.36, 2388.06, 9046.19, 1.30, 47.47, 521.66, 
+        2388.02, 8138.62, 8.41, 0.03, 392, 2388, 100, 39.06, 23.41
+      ];
+
+const response = await fetch("http://127.0.0.1:8000/predict",
+  {
+          method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sensors: sensorInput }),
+      });
+
+      const data = await response.json();
+      setRul(data.rul);
+    } catch (error) {
+      console.error("AI Server Offline. Make sure your Python script is running!", error);
+      alert("AI Server is offline! Run 'python3 main.py' in your nasa_project folder.");
+    } finally {
+      setLoadingAI(false);
+    }
+  };
+  // -------------------------------
+
   return (
     <AnimatePresence>
       {machine && (
@@ -72,6 +108,31 @@ export default function MachineDetailModal({ machine, onClose }: Props) {
                     }
                   </p>
                 </div>
+
+                {/* --- NEW NASA AI PREDICTION SECTION --- */}
+                <div className="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BrainCircuit size={18} className="text-emerald-500" />
+                    <span className="text-xs font-bold text-emerald-500 tracking-wider uppercase">NASA Turbofan Predictor</span>
+                  </div>
+                  
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-mono font-bold text-foreground">
+                      {loadingAI ? "..." : rul !== null ? rul : "--"}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-mono">CYCLES REMAINING</span>
+                  </div>
+
+                  <button 
+                    onClick={getAIPrediction}
+                    disabled={loadingAI}
+                    className="w-full mt-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold tracking-widest uppercase rounded transition-all flex items-center justify-center gap-2"
+                  >
+                    <Activity size={12} />
+                    {loadingAI ? "Analysing Sensors..." : "Run AI Prediction"}
+                  </button>
+                </div>
+                {/* --------------------------------------- */}
 
                 {/* Sensor Readouts */}
                 <div className="grid grid-cols-2 gap-3">
