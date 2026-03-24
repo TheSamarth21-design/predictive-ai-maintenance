@@ -1,17 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
-import { Activity, ShieldAlert, AlertTriangle, Zap, Clock, FileSpreadsheet, Download } from 'lucide-react';
+import { Activity, ShieldAlert, AlertTriangle, Zap, Clock, FileSpreadsheet, Download, Bell, Send } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import StatCard from '@/components/syncplant/StatCard';
 import MachineCard from '@/components/syncplant/MachineCard';
 import MachineDetailModal from '@/components/syncplant/MachineDetailModal';
 import AIChat from '@/components/syncplant/AIChat';
 import { MACHINES as INITIAL_MACHINES, generateSensorData, HEALTH_TREND, SAMPLE_LOGS, type Machine, type MaintenanceRecord, type MachineStatus } from '@/lib/syncplant-data';
+import { sendMachineAlert } from '@/lib/twilioService';
 import * as XLSX from 'xlsx';
 
 export default function DashboardPage() {
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
   const [sensorData, setSensorData] = useState(generateSensorData());
   const [machines, setMachines] = useState(INITIAL_MACHINES);
+  const [alertPhoneNumber, setAlertPhoneNumber] = useState<string>('');
+  const [sendingAlert, setSendingAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -82,6 +86,50 @@ export default function DashboardPage() {
     e.target.value = '';
   };
 
+  const sendCriticalAlerts = async () => {
+    if (!alertPhoneNumber) {
+      setAlertMessage({ type: 'error', text: 'Please enter a phone number' });
+      return;
+    }
+
+    setSendingAlert(true);
+    try {
+      // Find all critical or high-risk machines
+      const criticalMachines = machines.filter(m => m.status === 'Critical' || m.risk > 50);
+
+      if (criticalMachines.length === 0) {
+        setAlertMessage({ type: 'success', text: 'No critical machines to alert on.' });
+        setSendingAlert(false);
+        return;
+      }
+
+      // Send alert for each critical machine
+      const alerts = criticalMachines.map(machine =>
+        sendMachineAlert(
+          alertPhoneNumber,
+          machine.name,
+          `Risk Level: ${machine.risk}%. Health: ${machine.health}%.`,
+          'Maintenance Team',
+          machine.risk > 70 ? 'critical' : 'warning'
+        )
+      );
+
+      await Promise.all(alerts);
+      setAlertMessage({ 
+        type: 'success', 
+        text: `Sent ${criticalMachines.length} alert(s) to ${alertPhoneNumber}` 
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setAlertMessage({ 
+        type: 'error', 
+        text: `Error sending alerts: ${errorMessage}` 
+      });
+    } finally {
+      setSendingAlert(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -90,7 +138,7 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-bold text-foreground tracking-tight">Operational Overview</h2>
           <p className="text-muted-foreground text-sm">Real-time predictive intelligence for Plant Sector A-12</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button onClick={handleImportExcel} className="btn-secondary flex items-center gap-2">
             <FileSpreadsheet size={14} /> Import Excel
           </button>
@@ -104,8 +152,47 @@ export default function DashboardPage() {
           <button onClick={exportCSV} className="btn-primary flex items-center gap-2">
             <Download size={14} /> Export Report
           </button>
+          <div className="flex gap-2 items-center bg-blue-500/10 border border-blue-500/30 rounded-lg px-3 py-2">
+            <input
+              type="tel"
+              placeholder="+1 (555) XXX-XXXX"
+              value={alertPhoneNumber}
+              onChange={(e) => setAlertPhoneNumber(e.target.value)}
+              className="bg-transparent border-none outline-none text-sm text-foreground placeholder-muted-foreground w-40"
+            />
+            <button
+              onClick={sendCriticalAlerts}
+              disabled={sendingAlert || !alertPhoneNumber}
+              className="btn-primary flex items-center gap-1 py-1 px-3 text-sm disabled:opacity-50"
+            >
+              <Bell size={14} />
+              {sendingAlert ? 'Sending...' : 'Send Alert'}
+            </button>
+          </div>
         </div>
       </header>
+
+      {/* Alert Message Display */}
+      {alertMessage && (
+        <div className={`p-4 rounded-lg border flex items-center gap-3 animate-in fade-in ${
+          alertMessage.type === 'success'
+            ? 'bg-green-500/10 border-green-500/30 text-green-400'
+            : 'bg-red-500/10 border-red-500/30 text-red-400'
+        }`}>
+          {alertMessage.type === 'success' ? (
+            <div className="w-5 h-5 rounded-full bg-green-500/30 flex items-center justify-center text-xs">✓</div>
+          ) : (
+            <div className="w-5 h-5 rounded-full bg-red-500/30 flex items-center justify-center text-xs">!</div>
+          )}
+          <span className="text-sm flex-1">{alertMessage.text}</span>
+          <button
+            onClick={() => setAlertMessage(null)}
+            className="text-lg hover:opacity-70"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* KPI Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
