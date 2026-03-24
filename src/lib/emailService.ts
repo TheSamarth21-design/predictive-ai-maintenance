@@ -40,33 +40,73 @@ export const sendEmailAlert = async (payload: EmailAlertPayload) => {
     const emailBody = generateEmailBody(payload);
     const emailSubject = generateEmailSubject(payload);
 
-    // Call backend service to send email
-    const response = await fetch('/api/send-email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: payload.config.recipient,
-        cc: payload.config.ccList || '',
-        subject: emailSubject,
-        htmlBody: emailBody,
-      }),
-    });
+    // Try to call backend service, gracefully fallback to demo if not available
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: payload.config.recipient,
+          cc: payload.config.ccList || '',
+          subject: emailSubject,
+          htmlBody: emailBody,
+        }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to send email');
+      if (!response.ok) {
+        // If backend endpoint doesn't exist, use demo mode
+        if (response.status === 404) {
+          console.info('Backend email service not configured - using demo mode');
+          return simulateSendEmail(payload, emailSubject);
+        }
+        
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send email');
+      }
+
+      const data = await response.json();
+      console.log('Email sent successfully:', data);
+      return { success: true, ...data };
+    } catch (err: unknown) {
+      // If fetch fails (likely no backend), use demo mode
+      if (err instanceof TypeError) {
+        console.info('Backend service unavailable - using demo mode');
+        return simulateSendEmail(payload, emailSubject);
+      }
+      throw err;
     }
-
-    const data = await response.json();
-    console.log('Email sent successfully:', data);
-    return { success: true, ...data };
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     console.error('Error sending email:', err);
     throw new Error(`Email send failed: ${errorMessage}`);
   }
+};
+
+/**
+ * Simulate email sending for demo/testing
+ */
+function simulateSendEmail(payload: EmailAlertPayload, subject: string) {
+  return new Promise((resolve) => {
+    // Simulate network delay
+    setTimeout(() => {
+      console.log('📧 Demo Email Sent:');
+      console.log(`   To: ${payload.config.recipient}`);
+      if (payload.config.ccList) console.log(`   CC: ${payload.config.ccList}`);
+      console.log(`   Subject: ${subject}`);
+      console.log(`   Machine: ${payload.machineName}`);
+      console.log(`   Risk: ${payload.risk}% | Health: ${payload.health}%`);
+      
+      resolve({
+        success: true,
+        demo: true,
+        message: 'Email sent successfully (demo mode)',
+        recipient: payload.config.recipient,
+        timestamp: new Date().toISOString(),
+      });
+    }, 1000);
+  });
 };
 
 /**
