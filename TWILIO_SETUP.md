@@ -84,4 +84,4 @@ Please review dashboard for details.
 - Trial Twilio accounts are free but limited
 - Upgrade to a paid account for production use
 - Phone numbers must be in valid international format (e.g., +1 for US)
-- Each SMS typically costs $0.01 (or included in your plan)
+- Each SMS typically costs ₹0.83 (or included in your plan)

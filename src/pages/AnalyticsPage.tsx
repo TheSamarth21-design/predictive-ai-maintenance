@@ -18,15 +18,15 @@ export default function AnalyticsPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Downtime Saved" value="$186K" trend="+34%" icon={DollarSign} variant="safe" />
-        <StatCard label="Maintenance Cost" value="$93K" trend="-22%" icon={TrendingDown} variant="safe" />
+        <StatCard label="Downtime Saved" value="₹1.55Cr" trend="+34%" icon={DollarSign} variant="safe" />
+        <StatCard label="Maintenance Cost" value="₹77Lakhs" trend="-22%" icon={TrendingDown} variant="safe" />
         <StatCard label="Hours Saved" value="124h" trend="+18h" icon={Clock} variant="ai" />
         <StatCard label="Repairs Prevented" value="14" trend="+3" icon={Wrench} variant="safe" />
       </div>
 
       {/* Cost Comparison Chart */}
       <div className="card-industrial p-5">
-        <h3 className="section-title mb-4">Reactive vs Predictive Maintenance Cost</h3>
+        <h3 className="section-title mb-4">Reactive vs Predictive Maintenance Cost (₹)</h3>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={COST_DATA}>
@@ -35,8 +35,8 @@ export default function AnalyticsPage() {
               <YAxis stroke="hsl(215, 16%, 47%)" fontSize={10} fontFamily="monospace" tickFormatter={(v) => `$${v / 1000}k`} />
               <Tooltip contentStyle={{ backgroundColor: chartStyle.bg, border: `1px solid ${chartStyle.border}`, fontSize: '11px', borderRadius: '6px' }} />
               <Legend wrapperStyle={{ fontSize: '11px' }} />
-              <Bar dataKey="reactive" name="Reactive Cost" fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="predictive" name="Predictive Cost" fill="hsl(239, 84%, 67%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="reactive" name="Reactive Cost (₹)" fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="predictive" name="Predictive Cost (₹)" fill="hsl(239, 84%, 67%)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -60,13 +60,13 @@ export default function AnalyticsPage() {
 
       {/* AI Cost Insights */}
       <div className="card-industrial p-5">
-        <h3 className="section-title mb-3">AI Cost Optimization Insights</h3>
+        <h3 className="section-title mb-3">AI Cost Optimization Insights (₹)</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { title: 'Increase TR-01 monitoring frequency', savings: '$45,000/quarter', reason: 'Early detection prevents $15K+ emergency repairs. Current failure pattern shows 48h warning window.' },
-            { title: 'Batch maintenance for HP-07 & WD-03', savings: '$8,200/event', reason: 'Co-scheduling reduces downtime by 40%. Shared tooling and crew deployment.' },
-            { title: 'Switch CM-02 to condition-based maintenance', savings: '$12,000/year', reason: 'Current time-based schedule over-services by 30%. Sensor data shows longer viable intervals.' },
-            { title: 'Implement vibration-based shutdown triggers', savings: '$92,000/year', reason: 'Automated shutdown at 0.7g threshold prevents cascading failures. ROI: 340%.' },
+            { title: 'Increase TR-01 monitoring frequency', savings: '₹37.35Lakhs/quarter', reason: 'Early detection prevents ₹12.45Lakhs+ emergency repairs. Current failure pattern shows 48h warning window.' },
+            { title: 'Batch maintenance for HP-07 & WD-03', savings: '₹6.8Lakhs/event', reason: 'Co-scheduling reduces downtime by 40%. Shared tooling and crew deployment.' },
+            { title: 'Switch CM-02 to condition-based maintenance', savings: '₹9.96Lakhs/year', reason: 'Current time-based schedule over-services by 30%. Sensor data shows longer viable intervals.' },
+            { title: 'Implement vibration-based shutdown triggers', savings: '₹76.36Lakhs/year', reason: 'Automated shutdown at 0.7g threshold prevents cascading failures. ROI: 340%.' },
           ].map((insight, i) => (
             <div key={i} className="bg-secondary/30 p-4 rounded-lg border border-border">
               <div className="flex justify-between items-start mb-2">

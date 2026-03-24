@@ -67,56 +67,56 @@ export const MACHINES: Machine[] = [
   {
     id: 'HP-07', name: 'Hydraulic Press', status: 'Warning', risk: 68, load: 82, temp: 74, vibration: 0.6, pressure: 112, rpm: 1450, health: 72, lastService: '2024-11-14', nextService: '2025-01-20',
     history: [
-      { date: '2024-11-14', type: 'Scheduled', description: 'Bearing replacement', cost: 2400, duration: '4h' },
-      { date: '2024-08-22', type: 'Emergency', description: 'Hydraulic seal failure', cost: 8500, duration: '12h' },
-      { date: '2024-05-10', type: 'Scheduled', description: 'Pressure calibration', cost: 600, duration: '2h' },
+      { date: '2024-11-14', type: 'Scheduled', description: 'Bearing replacement', cost: 199200, duration: '4h' },
+      { date: '2024-08-22', type: 'Emergency', description: 'Hydraulic seal failure', cost: 705500, duration: '12h' },
+      { date: '2024-05-10', type: 'Scheduled', description: 'Pressure calibration', cost: 49800, duration: '2h' },
     ]
   },
   {
     id: 'CN-12', name: 'CNC Milling Center', status: 'Running', risk: 12, load: 45, temp: 42, vibration: 0.1, pressure: 98, rpm: 3200, health: 98, lastService: '2025-01-05', nextService: '2025-04-15',
     history: [
-      { date: '2025-01-05', type: 'Scheduled', description: 'Spindle lubrication', cost: 350, duration: '1.5h' },
-      { date: '2024-10-18', type: 'Scheduled', description: 'Tool holder inspection', cost: 200, duration: '1h' },
+      { date: '2025-01-05', type: 'Scheduled', description: 'Spindle lubrication', cost: 29050, duration: '1.5h' },
+      { date: '2024-10-18', type: 'Scheduled', description: 'Tool holder inspection', cost: 16600, duration: '1h' },
     ]
   },
   {
     id: 'TR-01', name: 'Thermal Reactor', status: 'Critical', risk: 94, load: 95, temp: 112, vibration: 0.9, pressure: 145, rpm: 800, health: 24, lastService: '2024-09-30', nextService: '2025-01-10',
     history: [
-      { date: '2024-09-30', type: 'Emergency', description: 'Core temperature regulation failure', cost: 15000, duration: '24h' },
-      { date: '2024-07-15', type: 'Scheduled', description: 'Thermal insulation replacement', cost: 4200, duration: '8h' },
-      { date: '2024-03-20', type: 'Emergency', description: 'Pressure relief valve stuck', cost: 6800, duration: '6h' },
+      { date: '2024-09-30', type: 'Emergency', description: 'Core temperature regulation failure', cost: 1245000, duration: '24h' },
+      { date: '2024-07-15', type: 'Scheduled', description: 'Thermal insulation replacement', cost: 348600, duration: '8h' },
+      { date: '2024-03-20', type: 'Emergency', description: 'Pressure relief valve stuck', cost: 564400, duration: '6h' },
     ]
   },
   {
     id: 'AP-04', name: 'Assembly Pivot Arm', status: 'Running', risk: 5, load: 30, temp: 38, vibration: 0.05, pressure: 95, rpm: 120, health: 99, lastService: '2025-01-12', nextService: '2025-06-01',
     history: [
-      { date: '2025-01-12', type: 'Scheduled', description: 'Joint lubrication', cost: 150, duration: '0.5h' },
+      { date: '2025-01-12', type: 'Scheduled', description: 'Joint lubrication', cost: 12450, duration: '0.5h' },
     ]
   },
   {
     id: 'WD-03', name: 'Welding Station Delta', status: 'Warning', risk: 45, load: 67, temp: 88, vibration: 0.35, pressure: 105, rpm: 0, health: 61, lastService: '2024-12-01', nextService: '2025-02-15',
     history: [
-      { date: '2024-12-01', type: 'Scheduled', description: 'Electrode replacement', cost: 800, duration: '2h' },
-      { date: '2024-09-15', type: 'Emergency', description: 'Power supply fault', cost: 3200, duration: '5h' },
+      { date: '2024-12-01', type: 'Scheduled', description: 'Electrode replacement', cost: 66400, duration: '2h' },
+      { date: '2024-09-15', type: 'Emergency', description: 'Power supply fault', cost: 265600, duration: '5h' },
     ]
   },
   {
     id: 'CV-08', name: 'Conveyor Belt System', status: 'Running', risk: 18, load: 55, temp: 35, vibration: 0.15, pressure: 0, rpm: 60, health: 91, lastService: '2025-01-08', nextService: '2025-04-08',
     history: [
-      { date: '2025-01-08', type: 'Scheduled', description: 'Belt tension adjustment', cost: 250, duration: '1h' },
+      { date: '2025-01-08', type: 'Scheduled', description: 'Belt tension adjustment', cost: 20750, duration: '1h' },
     ]
   },
   {
     id: 'CM-02', name: 'Compressor Unit B', status: 'Running', risk: 22, load: 70, temp: 56, vibration: 0.2, pressure: 130, rpm: 2800, health: 85, lastService: '2024-12-20', nextService: '2025-03-20',
     history: [
-      { date: '2024-12-20', type: 'Scheduled', description: 'Filter replacement', cost: 450, duration: '1.5h' },
-      { date: '2024-08-10', type: 'Scheduled', description: 'Valve inspection', cost: 300, duration: '2h' },
+      { date: '2024-12-20', type: 'Scheduled', description: 'Filter replacement', cost: 37350, duration: '1.5h' },
+      { date: '2024-08-10', type: 'Scheduled', description: 'Valve inspection', cost: 24900, duration: '2h' },
     ]
   },
   {
     id: 'RB-05', name: 'Robotic Arm #5', status: 'Running', risk: 8, load: 40, temp: 44, vibration: 0.08, pressure: 0, rpm: 0, health: 96, lastService: '2025-01-15', nextService: '2025-07-15',
     history: [
-      { date: '2025-01-15', type: 'Scheduled', description: 'Servo calibration', cost: 500, duration: '2h' },
+      { date: '2025-01-15', type: 'Scheduled', description: 'Servo calibration', cost: 41500, duration: '2h' },
     ]
   },
 ];
