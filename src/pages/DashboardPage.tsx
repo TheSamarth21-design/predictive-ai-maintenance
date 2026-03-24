@@ -13,10 +13,18 @@ export default function DashboardPage() {
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
   const [sensorData, setSensorData] = useState(generateSensorData());
   const [machines, setMachines] = useState(INITIAL_MACHINES);
-  const [alertPhoneNumber, setAlertPhoneNumber] = useState<string>('');
+  const [alertPhoneNumber, setAlertPhoneNumber] = useState<string>('+919975873744');
   const [sendingAlert, setSendingAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [alertedMachines, setAlertedMachines] = useState<Set<string>>(new Set());
+  const [autoAlertEnabled, setAutoAlertEnabled] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const alertPhoneRef = useRef<string>('');
+
+  // Update phone ref whenever it changes
+  useEffect(() => {
+    alertPhoneRef.current = alertPhoneNumber;
+  }, [alertPhoneNumber]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,6 +39,73 @@ export default function DashboardPage() {
     }, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // Auto-send alerts when thresholds are crossed
+  useEffect(() => {
+    if (!autoAlertEnabled || !alertPhoneRef.current) return;
+
+    const checkAndSendAlerts = async () => {
+      const newAlertsToSend: Machine[] = [];
+
+      machines.forEach(machine => {
+        // Check if machine crosses any threshold and hasn't been alerted yet
+        const isCritical = machine.status === 'Critical';
+        const highRisk = machine.risk > 50;
+        const lowHealth = machine.health < 50;
+        const shouldAlert = isCritical || highRisk || lowHealth;
+
+        if (shouldAlert && !alertedMachines.has(machine.id)) {
+          newAlertsToSend.push(machine);
+        }
+      });
+
+      if (newAlertsToSend.length > 0) {
+        setSendingAlert(true);
+        try {
+          // Send alerts for machines that crossed threshold
+          const alerts = newAlertsToSend.map(machine =>
+            sendMachineAlert(
+              alertPhoneRef.current,
+              machine.name,
+              `Status: ${machine.status}, Risk: ${machine.risk}%, Health: ${machine.health}%`,
+              'Maintenance Team',
+              machine.risk > 70 || machine.status === 'Critical' ? 'critical' : 'warning'
+            )
+          );
+
+          await Promise.all(alerts);
+
+          // Mark these machines as alerted
+          setAlertedMachines(prev => {
+            const updated = new Set(prev);
+            newAlertsToSend.forEach(m => updated.add(m.id));
+            return updated;
+          });
+
+          setAlertMessage({
+            type: 'success',
+            text: `⚠️ Auto-alert sent for ${newAlertsToSend.length} critical machine(s)`
+          });
+
+          // Clear message after 5 seconds
+          setTimeout(() => setAlertMessage(null), 5000);
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          console.error('Auto-alert error:', err);
+          setAlertMessage({
+            type: 'error',
+            text: `Auto-alert failed: ${errorMessage}`
+          });
+        } finally {
+          setSendingAlert(false);
+        }
+      }
+    };
+
+    // Check every 5 seconds
+    const interval = setInterval(checkAndSendAlerts, 5000);
+    return () => clearInterval(interval);
+  }, [machines, alertedMachines, autoAlertEnabled]);
 
   const exportCSV = () => {
     const headers = 'Machine,Status,Risk,Health,Temperature,Vibration\n';
@@ -167,6 +242,21 @@ export default function DashboardPage() {
             >
               <Bell size={14} />
               {sendingAlert ? 'Sending...' : 'Send Alert'}
+            </button>
+          </div>
+          <div className={`flex gap-2 items-center px-3 py-2 rounded-lg border ${
+            autoAlertEnabled 
+              ? 'bg-green-500/10 border-green-500/30' 
+              : 'bg-gray-500/10 border-gray-500/30'
+          }`}>
+            <Bell size={16} className={autoAlertEnabled ? 'text-green-400' : 'text-gray-400'} />
+            <button
+              onClick={() => setAutoAlertEnabled(!autoAlertEnabled)}
+              className={`text-sm font-semibold transition-colors ${
+                autoAlertEnabled ? 'text-green-400 hover:text-green-300' : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              {autoAlertEnabled ? 'Auto-Alert ON' : 'Auto-Alert OFF'}
             </button>
           </div>
         </div>
