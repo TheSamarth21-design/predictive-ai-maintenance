@@ -71,8 +71,8 @@ export default function DashboardPage() {
         history: (row.history as MaintenanceRecord[]) || []
       }));
 
-      setMachines(prev => [...prev, ...importedMachines]);
-      alert(`Imported ${importedMachines.length} machines from Excel`);
+      setMachines(importedMachines);
+      alert(`Imported ${importedMachines.length} machines from Excel. Replaced existing data.`);
     } catch (error) {
       console.error('Error importing Excel:', error);
       alert('Error importing Excel file. Please check the format.');
