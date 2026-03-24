@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Mail, Check, X, Settings, Send } from 'lucide-react';
 import { generateAlerts, type Alert } from '@/lib/syncplant-data';
+import { sendEmailAlert } from '@/lib/emailService';
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>(generateAlerts());
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [emailPreview, setEmailPreview] = useState<Alert | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [emailSettings, setEmailSettings] = useState({
     recipient: 'ops-team@syncplant.io',
     ccList: 'manager@syncplant.io',
@@ -25,6 +28,42 @@ export default function AlertsPage() {
 
   const dismissAlert = (id: string) => {
     setAlerts(prev => prev.filter(a => a.id !== id));
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailPreview || !emailEnabled || !emailSettings.recipient) return;
+
+    setSendingEmail(true);
+    setEmailStatus(null);
+
+    try {
+      await sendEmailAlert({
+        machineName: emailPreview.machine,
+        status: emailPreview.type,
+        risk: 75,
+        health: 35,
+        alertType: emailPreview.type === 'critical' ? 'critical' : 'warning',
+        fault: emailPreview.message,
+        engineerName: 'Maintenance Team',
+        config: emailSettings,
+      });
+
+      setEmailStatus({
+        type: 'success',
+        message: `✓ Email sent to ${emailSettings.recipient}`,
+      });
+
+      // Clear status after 3 seconds
+      setTimeout(() => setEmailStatus(null), 3000);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setEmailStatus({
+        type: 'error',
+        message: `✗ Failed: ${errorMessage}`,
+      });
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   return (
