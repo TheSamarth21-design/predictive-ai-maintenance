@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Activity, ShieldAlert, AlertTriangle, Zap, Clock, FileSpreadsheet, Download } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import StatCard from '@/components/syncplant/StatCard';
 import MachineCard from '@/components/syncplant/MachineCard';
 import MachineDetailModal from '@/components/syncplant/MachineDetailModal';
 import AIChat from '@/components/syncplant/AIChat';
-import { MACHINES, generateSensorData, HEALTH_TREND, SAMPLE_LOGS, type Machine } from '@/lib/syncplant-data';
+import { MACHINES as INITIAL_MACHINES, generateSensorData, HEALTH_TREND, SAMPLE_LOGS, type Machine, type MaintenanceRecord, type MachineStatus } from '@/lib/syncplant-data';
+import * as XLSX from 'xlsx';
 
 export default function DashboardPage() {
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
   const [sensorData, setSensorData] = useState(generateSensorData());
+  const [machines, setMachines] = useState(INITIAL_MACHINES);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -27,12 +30,56 @@ export default function DashboardPage() {
 
   const exportCSV = () => {
     const headers = 'Machine,Status,Risk,Health,Temperature,Vibration\n';
-    const rows = MACHINES.map(m => `${m.id},${m.status},${m.risk}%,${m.health}%,${m.temp}°C,${m.vibration}g`).join('\n');
+    const rows = machines.map(m => `${m.id},${m.status},${m.risk}%,${m.health}%,${m.temp}°C,${m.vibration}g`).join('\n');
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = 'syncplant-report.csv'; a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleImportExcel = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      // Assuming the Excel has columns: id, name, status, risk, load, temp, vibration, pressure, rpm, health, lastService, nextService
+      // For simplicity, map to Machine type, with defaults for missing fields
+      const importedMachines: Machine[] = jsonData.map((row: Record<string, unknown>) => ({
+        id: (row.id as string) || `M${Date.now()}`,
+        name: (row.name as string) || (row.id as string) || 'Unknown Machine',
+        status: (row.status as MachineStatus) || 'Running',
+        risk: (row.risk as number) || 0,
+        load: (row.load as number) || 0,
+        temp: (row.temp as number) || 0,
+        vibration: (row.vibration as number) || 0,
+        pressure: (row.pressure as number) || 0,
+        rpm: (row.rpm as number) || 0,
+        health: (row.health as number) || 100,
+        lastService: (row.lastService as string) || '2024-01-01',
+        nextService: (row.nextService as string) || '2024-12-31',
+        history: (row.history as MaintenanceRecord[]) || []
+      }));
+
+      setMachines(prev => [...prev, ...importedMachines]);
+      alert(`Imported ${importedMachines.length} machines from Excel`);
+    } catch (error) {
+      console.error('Error importing Excel:', error);
+      alert('Error importing Excel file. Please check the format.');
+    }
+
+    // Reset the input
+    e.target.value = '';
   };
 
   return (
@@ -44,9 +91,16 @@ export default function DashboardPage() {
           <p className="text-muted-foreground text-sm">Real-time predictive intelligence for Plant Sector A-12</p>
         </div>
         <div className="flex gap-2">
-          <button className="btn-secondary flex items-center gap-2">
+          <button onClick={handleImportExcel} className="btn-secondary flex items-center gap-2">
             <FileSpreadsheet size={14} /> Import Excel
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
           <button onClick={exportCSV} className="btn-primary flex items-center gap-2">
             <Download size={14} /> Export Report
           </button>
@@ -72,7 +126,7 @@ export default function DashboardPage() {
               <span className="data-label">SORT BY: RISK LEVEL</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {MACHINES.sort((a, b) => b.risk - a.risk).slice(0, 4).map(m => (
+              {machines.sort((a, b) => b.risk - a.risk).slice(0, 4).map(m => (
                 <MachineCard key={m.id} machine={m} onClick={setSelectedMachine} />
               ))}
             </div>
